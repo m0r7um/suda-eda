@@ -3,10 +3,8 @@ package org.food.sudaeda.core.service;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+
 import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.food.sudaeda.core.enums.Role;
@@ -30,13 +28,13 @@ public class OrderService {
     private final UserRepository userRepository;
     private final SuggestedOrdersRepository suggestedOrdersRepository;
     private final DeliveryService deliveryService;
-    private final SellerService sellerService;
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
         User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
         if (seller.getRole() != Role.SELLER) throw new WrongSellerRoleException("Found user has wrong role");
         Order order = new Order();
         order.setSeller(seller);
+        order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.NEW_ORDER);
         Order savedOrder = orderRepository.save(order);
         new Thread(
@@ -146,12 +144,19 @@ public class OrderService {
                 OrderStatus.ORDER_READY
         );
         LocalDateTime deliveryTime = LocalDateTime.now().plus(deliveryService.getDeliveryTime(order));
+        order.setDeliveryTime(deliveryTime);
 
         new Thread(() -> {
             Order foundOrder = orderRepository.findById(order.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
 
             try {
-                Thread.sleep(deliveryService.getDeliveryTime(foundOrder).toMillis());
+                Duration orderDeliveryTime = Duration.between(LocalDateTime.now(), foundOrder.getDeliveryTime());
+                Duration deliveryTimeDeadline = Collections.max(Arrays.asList(
+                        orderDeliveryTime,
+                        deliveryService.getDeliveryTime(foundOrder)
+                ), Duration::compareTo);
+
+                Thread.sleep(deliveryTimeDeadline);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

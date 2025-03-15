@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "orders")
 @Service
@@ -19,6 +21,10 @@ public class Order {
     @ManyToOne()
     @JoinColumn(name = "seller_id")
     private User seller;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime deliveryTime;
 
     private OrderStatus status;
 }

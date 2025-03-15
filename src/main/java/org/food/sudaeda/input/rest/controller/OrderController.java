@@ -49,6 +49,6 @@ public class OrderController {
             @PathVariable Long id,
             @RequestBody MarkAsStartedRequest request
     ) {
-        return ResponseEntity.ok(orderService.markAsStarted(id, request, true));
+        return ResponseEntity.ok(orderService.markAsStarted(id, request));
     }
 }

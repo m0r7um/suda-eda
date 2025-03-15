@@ -60,16 +60,10 @@ public class OrderService {
     }
 
     public ProcessNewOrderBySellerResponse processNewOrder(Long orderId, ProcessNewOrderBySellerRequest request, boolean accepted) {
-        User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
+        Order order = validateOrderUpdate(orderId, request.getSellerId());
 
         if (!order.getStatus().equals(OrderStatus.NEW_ORDER)) {
             throw new IllegalTransitionException("You can accept/reject only new orders");
-        }
-
-        if (seller.getRole() != Role.SELLER) throw new WrongSellerRoleException("Found user has wrong role");
-        if (!order.getSeller().equals(seller)) {
-            throw new AccessViolationException("You are not allowed to reject this order");
         }
 
         if (accepted) {
@@ -91,20 +85,42 @@ public class OrderService {
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
     }
 
-    public MarkAsStartedResponse markAsStarted(Long orderId, MarkAsStartedRequest request, boolean accepted) {
-        User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
-        if (!order.getStatus().equals(OrderStatus.APPROVED_BY_COURIER)) {
-            throw new IllegalTransitionException("You cant start this order, because courier not approved it");
+    public MarkAsStartedResponse markAsStarted(Long orderId, MarkAsStartedRequest request) {
+        Order order = updateStatus(
+                validateOrderUpdate(orderId, request.getSellerId()),
+                OrderStatus.APPROVED_BY_COURIER,
+                OrderStatus.ORDER_IN_PROGRESS
+        );
+        return new MarkAsStartedResponse(order.getId(), order.getStatus());
+    }
+
+    public MarkAsStartedResponse markAsReady(Long orderId, MarkAsStartedRequest request) {
+        Order order = updateStatus(
+                validateOrderUpdate(orderId, request.getSellerId()),
+                OrderStatus.ORDER_IN_PROGRESS,
+                OrderStatus.ORDER_READY
+        );
+        return new MarkAsStartedResponse(order.getId(), order.getStatus());
+    }
+
+    private Order updateStatus(Order order, OrderStatus fromStatus, OrderStatus toStatus) {
+        if (!order.getStatus().equals(fromStatus)) {
+            throw new IllegalTransitionException("Transition between statuses " + fromStatus + " and " + toStatus + "is not allowed.");
         }
 
+        order.setStatus(toStatus);
+        return orderRepository.save(order);
+    }
+
+    private Order validateOrderUpdate(Long orderId, Long sellerId) {
+        User seller = userRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("User not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
         if (seller.getRole() != Role.SELLER) throw new WrongSellerRoleException("Found user has wrong role");
+
         if (!order.getSeller().equals(seller)) {
             throw new AccessViolationException("You are not allowed to update this order");
         }
 
-        order.setStatus(OrderStatus.ORDER_IN_PROGRESS);
-        Order savedOrder = orderRepository.save(order);
-        return new MarkAsStartedResponse(savedOrder.getId(), savedOrder.getStatus());
+        return order;
     }
 }

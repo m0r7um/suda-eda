@@ -6,6 +6,18 @@ spring:
     url: jdbc:postgresql://localhost:5432/studs
     username: postgres
     password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
 springdoc:
   swagger-ui:
     path: '/swagger-ui'
+logging:
+  level:
+    org:
+      food:
+        sudaeda:
+          core:
+            service:
+              OrderService: debug

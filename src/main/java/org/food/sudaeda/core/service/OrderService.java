@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.food.sudaeda.core.enums.Role;
 import org.food.sudaeda.core.enums.SuggestedOrderStatus;
@@ -24,6 +25,7 @@ import org.food.sudaeda.core.model.Order;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -88,16 +90,19 @@ public class OrderService {
     }
 
     private void findCourier(Order order) {
+        log.debug("Started courier finding");
         new Timer().schedule(new TimerTask() {
             final Instant start = Instant.now();
             final Instant finish = Instant.now().plusSeconds(FINDING_SCHEDULE_TIMEOUT_SECONDS);
             @Override
             public void run() {
+                log.debug("Attempt to find courier");
                 Optional<SuggestedOrder> orderSuggestion = suggestedOrdersRepository.findByOrderAndStatusNot(
                         order,
                         SuggestedOrderStatus.REJECTED
                 );
                 if (orderSuggestion.isEmpty()) {
+                    log.debug("No suggested order found with not rejected status");
                     SuggestedOrder newOrderSuggestion = new SuggestedOrder();
                     User courier = findCourier();
                     newOrderSuggestion.setCourier(courier);
@@ -108,8 +113,9 @@ public class OrderService {
                     SuggestedOrder suggestedOrder = orderSuggestion.get();
                     if (suggestedOrder.getStatus().equals(SuggestedOrderStatus.ACCEPTED)) {
                         order.setStatus(OrderStatus.APPROVED_BY_COURIER);
+                        log.debug("Courier found {}", suggestedOrder.getCourier().getId());
+                        cancel();
                     }
-                    cancel();
                     return;
                 }
 
@@ -144,6 +150,7 @@ public class OrderService {
         );
         LocalDateTime deliveryTime = LocalDateTime.now().plus(deliveryService.getDeliveryTime(order));
         order.setDeliveryTime(deliveryTime);
+        orderRepository.save(order);
 
         new Thread(() -> {
             Order foundOrder = orderRepository.findById(order.getId()).orElseThrow(() -> new NotFoundException("Order not found"));

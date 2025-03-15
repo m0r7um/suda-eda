@@ -26,5 +26,6 @@ public class Order {
 
     private LocalDateTime deliveryTime;
 
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
 }

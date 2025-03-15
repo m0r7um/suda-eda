@@ -32,7 +32,7 @@ public class SuggestedOrderService {
 
     @Transactional
     public SuggestedOrderResponse acceptSuggestion(Long suggestedOrderId) {
-        SuggestedOrder suggestedOrder = suggestedOrdersRepository.findById(suggestedOrderId).orElseThrow(() -> new NotFoundException("Suggested order not found"));
+        SuggestedOrder suggestedOrder = suggestedOrdersRepository.findById(suggestedOrderId).orElseThrow(() -> new NotFoundException("Suggested order not found " + suggestedOrderId));
         suggestedOrder.setStatus(SuggestedOrderStatus.ACCEPTED);
         SuggestedOrder savedSuggestedOrder = suggestedOrdersRepository.save(suggestedOrder);
         Order foundOrder = orderRepository.findById(savedSuggestedOrder.getOrder().getId()).orElseThrow(() -> new NotFoundException("Order not found"));

@@ -22,5 +22,6 @@ public class SuggestedOrder {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @Enumerated(EnumType.STRING)
     private SuggestedOrderStatus status;
 }

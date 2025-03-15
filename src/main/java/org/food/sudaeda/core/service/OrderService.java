@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.food.sudaeda.core.enums.Role;
 import org.food.sudaeda.core.enums.SuggestedOrderStatus;
+import org.food.sudaeda.core.mappers.OrderMapper;
 import org.food.sudaeda.core.model.SuggestedOrder;
 import org.food.sudaeda.core.model.User;
 import org.food.sudaeda.core.repository.OrderRepository;
@@ -28,6 +29,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final SuggestedOrdersRepository suggestedOrdersRepository;
     private final DeliveryService deliveryService;
+    private final OrderMapper orderMapper;
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
         User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
@@ -56,10 +58,7 @@ public class OrderService {
 
     public GetOrderResponse getOrderById(Long id) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Order not found"));
-        return new GetOrderResponse(
-                order.getId(),
-                order.getStatus()
-        );
+        return orderMapper.orderToResponse(order);
     }
 
     public ProcessNewOrderBySellerResponse processNewOrder(Long orderId, ProcessNewOrderBySellerRequest request, boolean accepted) {

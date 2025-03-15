@@ -155,7 +155,7 @@ public class OrderService {
                         deliveryService.getDeliveryTime(foundOrder)
                 ), Duration::compareTo);
 
-                Thread.sleep(deliveryTimeDeadline);
+                Thread.sleep(deliveryTimeDeadline.toMillis());
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    @Query("SELECT c FROM User c WHERE c.role = 'COURIER' AND NOT EXISTS(SELECT so FROM SuggestedOrder so WHERE so.courier.id <> c.id AND so.status != 'REJECTED')")
+    @Query("SELECT c FROM User c WHERE c.role = org.food.sudaeda.core.enums.Role.COURIER AND NOT EXISTS(SELECT so FROM SuggestedOrder so WHERE so.courier.id <> c.id AND so.status <> org.food.sudaeda.core.enums.SuggestedOrderStatus.REJECTED)")
     List<User> findFreeCouriers(Limit limit);
     Optional<User> findByIdAndRole(Long id, Role role);
 }

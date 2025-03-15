@@ -168,6 +168,15 @@ public class OrderService {
         return new MarkAsReadyResponse(order.getId(), order.getStatus(), deliveryTime);
     }
 
+    public MarkAsPickedUpResponse markAsPickedUp(Long orderId, MarkAsPickedUpRequest request) {
+        Order order = updateStatus(
+                validateOrderUpdate(orderId, request.getSellerId()),
+                OrderStatus.ORDER_READY,
+                OrderStatus.ORDER_PICKED_UP_BY_COURIER
+        );
+        return new MarkAsPickedUpResponse(order.getId(), order.getStatus());
+    }
+
     private Order updateStatus(Order order, OrderStatus fromStatus, OrderStatus toStatus) {
         if (!order.getStatus().equals(fromStatus)) {
             throw new IllegalTransitionException("Transition between statuses " + fromStatus + " and " + toStatus + "is not allowed.");

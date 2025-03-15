@@ -2,10 +2,7 @@ package org.food.sudaeda.input.rest.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.core.service.OrderService;
-import org.food.sudaeda.dto.request.CreateOrderRequest;
-import org.food.sudaeda.dto.request.MarkAsReadyRequest;
-import org.food.sudaeda.dto.request.MarkAsStartedRequest;
-import org.food.sudaeda.dto.request.ProcessNewOrderBySellerRequest;
+import org.food.sudaeda.dto.request.*;
 import org.food.sudaeda.dto.response.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,5 +53,13 @@ public class OrderController {
             @RequestBody MarkAsReadyRequest request
     ) {
         return ResponseEntity.ok(orderService.markAsReady(id, request));
+    }
+
+    @PostMapping("/{id}/mark-picked-up")
+    public ResponseEntity<MarkAsPickedUpResponse> markAsPickedUp(
+            @PathVariable Long id,
+            @RequestBody MarkAsPickedUpRequest request
+    ) {
+        return ResponseEntity.ok(orderService.markAsPickedUp(id, request));
     }
 }

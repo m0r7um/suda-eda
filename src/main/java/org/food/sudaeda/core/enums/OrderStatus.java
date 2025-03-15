@@ -1,0 +1,13 @@
+package org.food.sudaeda.core.enums;
+
+public enum OrderStatus {
+    NEW_ORDER,
+    SELLER_NOT_ANSWERED,
+    APPROVED_BY_SELLER,
+    REJECTED_BY_SELLER,
+    COURIER_NOT_FOUND,
+    APPROVED_BY_COURIER,
+    ORDER_READY,
+    ORDER_NOT_PICKED_UP_BY_COURIER,
+    ORDER_PICKED_UP_BY_COURIER,
+}

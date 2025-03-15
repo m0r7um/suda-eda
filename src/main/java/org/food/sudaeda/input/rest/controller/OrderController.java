@@ -3,12 +3,10 @@ package org.food.sudaeda.input.rest.controller;
 import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.core.service.OrderService;
 import org.food.sudaeda.dto.request.CreateOrderRequest;
+import org.food.sudaeda.dto.request.MarkAsReadyRequest;
 import org.food.sudaeda.dto.request.MarkAsStartedRequest;
 import org.food.sudaeda.dto.request.ProcessNewOrderBySellerRequest;
-import org.food.sudaeda.dto.response.CreateOrderResponse;
-import org.food.sudaeda.dto.response.GetOrderResponse;
-import org.food.sudaeda.dto.response.MarkAsStartedResponse;
-import org.food.sudaeda.dto.response.ProcessNewOrderBySellerResponse;
+import org.food.sudaeda.dto.response.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,5 +48,13 @@ public class OrderController {
             @RequestBody MarkAsStartedRequest request
     ) {
         return ResponseEntity.ok(orderService.markAsStarted(id, request));
+    }
+
+    @PostMapping("/{id}/mark-as-ready")
+    public ResponseEntity<MarkAsReadyResponse> markAsReady(
+            @PathVariable Long id,
+            @RequestBody MarkAsReadyRequest request
+    ) {
+        return ResponseEntity.ok(orderService.markAsReady(id, request));
     }
 }

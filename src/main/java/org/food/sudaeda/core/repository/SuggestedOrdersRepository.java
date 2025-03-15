@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SuggestedOrdersRepository extends JpaRepository<SuggestedOrder, Long> {
     Optional<SuggestedOrder> findByOrderAndStatusNot(Order order, SuggestedOrderStatus status);
+    Optional<SuggestedOrder> findByOrderAndStatus(Order order, SuggestedOrderStatus status);
 }

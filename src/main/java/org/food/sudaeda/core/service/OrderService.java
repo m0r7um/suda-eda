@@ -15,17 +15,9 @@ import org.food.sudaeda.core.model.User;
 import org.food.sudaeda.core.repository.OrderRepository;
 import org.food.sudaeda.core.repository.SuggestedOrdersRepository;
 import org.food.sudaeda.core.repository.UserRepository;
-import org.food.sudaeda.dto.request.CreateOrderRequest;
-import org.food.sudaeda.dto.request.MarkAsStartedRequest;
-import org.food.sudaeda.dto.request.ProcessNewOrderBySellerRequest;
-import org.food.sudaeda.dto.response.CreateOrderResponse;
-import org.food.sudaeda.dto.response.GetOrderResponse;
-import org.food.sudaeda.dto.response.MarkAsStartedResponse;
-import org.food.sudaeda.dto.response.ProcessNewOrderBySellerResponse;
-import org.food.sudaeda.exception.AccessViolationException;
-import org.food.sudaeda.exception.IllegalTransitionException;
-import org.food.sudaeda.exception.NotFoundException;
-import org.food.sudaeda.exception.WrongSellerRoleException;
+import org.food.sudaeda.dto.request.*;
+import org.food.sudaeda.dto.response.*;
+import org.food.sudaeda.exception.*;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.food.sudaeda.core.model.Order;
@@ -36,6 +28,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final SuggestedOrdersRepository suggestedOrdersRepository;
+    private final DeliveryService deliveryService;
+    private final SellerService sellerService;
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
         User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
@@ -144,13 +138,28 @@ public class OrderService {
         return new MarkAsStartedResponse(order.getId(), order.getStatus());
     }
 
-    public MarkAsStartedResponse markAsReady(Long orderId, MarkAsStartedRequest request) {
+    public MarkAsReadyResponse markAsReady(Long orderId, MarkAsReadyRequest request) {
         Order order = updateStatus(
                 validateOrderUpdate(orderId, request.getSellerId()),
                 OrderStatus.ORDER_IN_PROGRESS,
                 OrderStatus.ORDER_READY
         );
-        return new MarkAsStartedResponse(order.getId(), order.getStatus());
+        new Thread(() -> {
+            Order foundOrder = orderRepository.findById(order.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
+
+            try {
+                Duration deliveryTime = deliveryService.getDeliveryTime(foundOrder);
+                Thread.sleep(deliveryTime.toMillis());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (foundOrder.getStatus() == OrderStatus.ORDER_READY) {
+                foundOrder.setStatus(OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
+            }
+            orderRepository.save(foundOrder);
+        }).start();
+
+        return new MarkAsReadyResponse(order.getId(), order.getStatus());
     }
 
     private Order updateStatus(Order order, OrderStatus fromStatus, OrderStatus toStatus) {

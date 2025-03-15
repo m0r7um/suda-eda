@@ -75,8 +75,14 @@ public class OrderService {
     }
 
     private ProcessNewOrderBySellerResponse acceptNewOrder(Order order) {
-        order.setStatus(OrderStatus.APPROVED_BY_COURIER);
+        order.setStatus(OrderStatus.APPROVED_BY_SELLER);
         findCourier(order);
+        Order savedOrder = orderRepository.save(order);
+        return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
+    }
+
+    private ProcessNewOrderBySellerResponse rejectNewOrder(Order order) {
+        order.setStatus(OrderStatus.REJECTED_BY_SELLER);
         Order savedOrder = orderRepository.save(order);
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
     }
@@ -119,12 +125,6 @@ public class OrderService {
         List<User> freeCourier = userRepository.findFreeCouriers(Limit.of(1));
         if (freeCourier.isEmpty()) throw new NotFoundException("Free courier not found");
         return freeCourier.get(0);
-    }
-
-    private ProcessNewOrderBySellerResponse rejectNewOrder(Order order) {
-        order.setStatus(OrderStatus.REJECTED_BY_SELLER);
-        Order savedOrder = orderRepository.save(order);
-        return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
     }
 
     public MarkAsStartedResponse markAsStarted(Long orderId, MarkAsStartedRequest request) {

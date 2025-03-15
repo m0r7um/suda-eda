@@ -1,11 +1,19 @@
 package org.food.sudaeda.core.service;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.food.sudaeda.core.enums.Role;
+import org.food.sudaeda.core.enums.SuggestedOrderStatus;
+import org.food.sudaeda.core.model.SuggestedOrder;
 import org.food.sudaeda.core.model.User;
 import org.food.sudaeda.core.repository.OrderRepository;
+import org.food.sudaeda.core.repository.SuggestedOrdersRepository;
 import org.food.sudaeda.core.repository.UserRepository;
 import org.food.sudaeda.dto.request.CreateOrderRequest;
 import org.food.sudaeda.dto.request.MarkAsStartedRequest;
@@ -18,6 +26,7 @@ import org.food.sudaeda.exception.AccessViolationException;
 import org.food.sudaeda.exception.IllegalTransitionException;
 import org.food.sudaeda.exception.NotFoundException;
 import org.food.sudaeda.exception.WrongSellerRoleException;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.food.sudaeda.core.model.Order;
 
@@ -26,6 +35,7 @@ import org.food.sudaeda.core.model.Order;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final SuggestedOrdersRepository suggestedOrdersRepository;
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
         User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
@@ -74,9 +84,49 @@ public class OrderService {
 
     private ProcessNewOrderBySellerResponse acceptNewOrder(Order order) {
         order.setStatus(OrderStatus.APPROVED_BY_COURIER);
-        // TODO add further logic for accepting order
+        findCourier(order);
         Order savedOrder = orderRepository.save(order);
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
+    }
+
+    private void findCourier(Order order) {
+        new Timer().schedule(new TimerTask() {
+            final Instant start = Instant.now();
+            final Instant finish = Instant.now().plusSeconds(FINDING_SCHEDULE_TIMEOUT_SECONDS);
+            @Override
+            public void run() {
+                Optional<SuggestedOrder> orderSuggestion = suggestedOrdersRepository.findByOrderAndStatusNot(
+                        order,
+                        SuggestedOrderStatus.REJECTED
+                );
+                if (orderSuggestion.isEmpty()) {
+                    SuggestedOrder newOrderSuggestion = new SuggestedOrder();
+                    User courier = findCourier();
+                    newOrderSuggestion.setCourier(courier);
+                    newOrderSuggestion.setOrder(order);
+                    newOrderSuggestion.setStatus(SuggestedOrderStatus.PENDING);
+                    suggestedOrdersRepository.save(newOrderSuggestion);
+                } else {
+                    SuggestedOrder suggestedOrder = orderSuggestion.get();
+                    if (suggestedOrder.getStatus().equals(SuggestedOrderStatus.ACCEPTED)) {
+                        order.setStatus(OrderStatus.APPROVED_BY_COURIER);
+                    }
+                    cancel();
+                    return;
+                }
+
+                if (start.compareTo(finish) > 0) {
+                    order.setStatus(OrderStatus.COURIER_NOT_FOUND);
+                    cancel();
+                }
+            }
+        },0, FINDING_SCHEDULE_PERIOD_MILLIS);
+    }
+
+    private User findCourier() {
+        List<User> freeCourier = userRepository.findFreeCouriers(Limit.of(1));
+        if (freeCourier.isEmpty()) throw new NotFoundException("Free courier not found");
+        return freeCourier.get(0);
     }
 
     private ProcessNewOrderBySellerResponse rejectNewOrder(Order order) {
@@ -123,4 +173,7 @@ public class OrderService {
 
         return order;
     }
+
+    private static final Integer FINDING_SCHEDULE_TIMEOUT_SECONDS = 10 * 60;
+    private static final Integer FINDING_SCHEDULE_PERIOD_MILLIS = 2 * 1000;
 }

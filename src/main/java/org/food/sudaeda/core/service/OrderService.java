@@ -9,6 +9,7 @@ import org.food.sudaeda.core.repository.OrderRepository;
 import org.food.sudaeda.core.repository.UserRepository;
 import org.food.sudaeda.dto.request.CreateOrderRequest;
 import org.food.sudaeda.dto.response.CreateOrderResponse;
+import org.food.sudaeda.dto.response.GetOrderResponse;
 import org.food.sudaeda.exception.NotFoundException;
 import org.food.sudaeda.exception.WrongSellerRoleException;
 import org.springframework.stereotype.Service;
@@ -41,5 +42,13 @@ public class OrderService {
                 }
         ).start();
         return new CreateOrderResponse(savedOrder.getId());
+    }
+
+    public GetOrderResponse getOrderById(Long id) {
+        Order order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Order not found"));
+        return new GetOrderResponse(
+                order.getId(),
+                order.getStatus()
+        );
     }
 }

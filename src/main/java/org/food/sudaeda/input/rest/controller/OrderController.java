@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+
     @PostMapping
     public ResponseEntity<CreateOrderResponse> createNewOrder(@RequestBody CreateOrderRequest request) {
         return ResponseEntity.ok(orderService.createNewOrder(request));
@@ -30,7 +31,7 @@ public class OrderController {
             @PathVariable Long id,
             @RequestBody ProcessNewOrderBySellerRequest request
     ) {
-        return ResponseEntity.ok(orderService.acceptNewOrder(id, request));
+        return ResponseEntity.ok(orderService.processNewOrder(id, request, true));
     }
 
     @PostMapping("/{id}/reject")
@@ -38,6 +39,6 @@ public class OrderController {
             @PathVariable Long id,
             @RequestBody ProcessNewOrderBySellerRequest request
     ) {
-        return ResponseEntity.ok(orderService.rejectNewOrder(id, request));
+        return ResponseEntity.ok(orderService.processNewOrder(id, request, false));
     }
 }

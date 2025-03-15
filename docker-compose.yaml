@@ -1,0 +1,11 @@
+name: suda-eda
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: "studs"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"

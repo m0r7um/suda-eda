@@ -30,7 +30,7 @@ public class OrderService {
         new Thread(
                 () -> {
                     try {
-                        Thread.sleep(Duration.ofMinutes(10));
+                        Thread.sleep(Duration.ofMinutes(10).toMillis());
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }

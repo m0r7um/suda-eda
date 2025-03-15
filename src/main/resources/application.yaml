@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: suda-eda
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/studs
+    username: postgres
+    password: postgres

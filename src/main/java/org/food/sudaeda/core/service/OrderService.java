@@ -2,6 +2,7 @@ package org.food.sudaeda.core.service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
@@ -144,12 +145,13 @@ public class OrderService {
                 OrderStatus.ORDER_IN_PROGRESS,
                 OrderStatus.ORDER_READY
         );
+        LocalDateTime deliveryTime = LocalDateTime.now().plus(deliveryService.getDeliveryTime(order));
+
         new Thread(() -> {
             Order foundOrder = orderRepository.findById(order.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
 
             try {
-                Duration deliveryTime = deliveryService.getDeliveryTime(foundOrder);
-                Thread.sleep(deliveryTime.toMillis());
+                Thread.sleep(deliveryService.getDeliveryTime(foundOrder).toMillis());
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -159,7 +161,7 @@ public class OrderService {
             orderRepository.save(foundOrder);
         }).start();
 
-        return new MarkAsReadyResponse(order.getId(), order.getStatus());
+        return new MarkAsReadyResponse(order.getId(), order.getStatus(), deliveryTime);
     }
 
     private Order updateStatus(Order order, OrderStatus fromStatus, OrderStatus toStatus) {

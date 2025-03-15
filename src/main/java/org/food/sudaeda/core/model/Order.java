@@ -16,7 +16,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne()
+    @JoinColumn(name = "seller_id")
     private User seller;
 
     private OrderStatus status;

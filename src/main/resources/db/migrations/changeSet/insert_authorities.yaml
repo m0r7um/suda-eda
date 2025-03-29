@@ -12,3 +12,16 @@ databaseChangeLog:
               - column:
                   name: authority
                   value: ROLE_COURIER
+  - changeSet:
+      id: insert-one-more-authorities
+      author: user
+      changes:
+        - insert:
+            tableName: authorities
+            columns:
+              - column:
+                  name: username
+                  value: doe
+              - column:
+                  name: authority
+                  value: ROLE_SELLER

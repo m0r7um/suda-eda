@@ -21,3 +21,25 @@ databaseChangeLog:
               - column:
                   name: role_id
                   value: "1"
+  - changeSet:
+      id: insert-one-more-user
+      author: user
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "2"
+              - column:
+                  name: username
+                  value: "doe"
+              - column:
+                  name: password
+                  value: "$2a$10$aohc8ylx1YcZx6p/L2BRv.I4oQfDin9Ed2CNTy0ZXQ3ZpdiMalLp6"
+              - column:
+                  name: enabled
+                  valueBoolean: true
+              - column:
+                  name: role_id
+                  value: "2"

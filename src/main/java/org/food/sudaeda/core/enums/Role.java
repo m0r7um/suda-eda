@@ -1,6 +1,6 @@
 package org.food.sudaeda.core.enums;
 
 public enum Role {
-    COURIER,
-    SELLER,
+    ROLE_COURIER,
+    ROLE_SELLER,
 }

@@ -3,7 +3,6 @@ package org.food.sudaeda.core.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.food.sudaeda.core.enums.Role;
 
 @Entity
 @Table(name = "users")
@@ -12,6 +11,16 @@ import org.food.sudaeda.core.enums.Role;
 public class User {
     @Id
     private Long id;
-    @Enumerated(EnumType.STRING)
-    private Role role;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private Boolean enabled;
+
+    @OneToOne
+    private Authorities role;
 }

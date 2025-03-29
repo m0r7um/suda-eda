@@ -1,6 +1,9 @@
 spring:
   application:
     name: suda-eda
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/migrations/changelogMaster.yaml
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/studs
@@ -8,16 +11,11 @@ spring:
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
 springdoc:
   swagger-ui:
     path: '/swagger-ui'
 logging:
   level:
-    org:
-      food:
-        sudaeda:
-          core:
-            service:
-              OrderService: debug
+    root: info

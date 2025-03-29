@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-suggested-orders-table
+      author: martin.valts
+      changes:
+        - createTable:
+            tableName: suggested_orders
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: courier_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_suggested_orders_users
+                    references: users(id)
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_suggested_orders_orders
+                    references: orders(id)
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    checkConstraint: "status IN ('PENDING', 'ACCEPTED', 'REJECTED')"

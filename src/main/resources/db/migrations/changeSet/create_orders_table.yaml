@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-orders-table
+      author: user
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp(6)
+              - column:
+                  name: delivery_time
+                  type: timestamp(6)
+              - column:
+                  name: seller_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fksb9w6305d2be0rwbtifi7wymp
+                    references: users(id)
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    checkConstraint: "status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"

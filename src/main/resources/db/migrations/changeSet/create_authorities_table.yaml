@@ -1,0 +1,30 @@
+---
+databaseChangeLog:
+  - changeSet:
+      id: create_authorities_table
+      author: martin.valts
+      changes:
+        - createTable:
+            tableName: authorities
+            columns:
+              - column:
+                    name: id
+                    type: bigint
+                    constraints:
+                      primaryKey: true
+                      nullable: false
+                    autoIncrement: true
+              - column:
+                  name: username
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    referencedTableName: users
+                    referencedColumnNames: username
+                    foreignKeyName: fk_authorities_users
+              - column:
+                  name: authority
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false

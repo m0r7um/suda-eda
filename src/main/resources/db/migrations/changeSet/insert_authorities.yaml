@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-initial-authorities
+      author: user
+      changes:
+        - insert:
+            tableName: authorities
+            columns:
+              - column:
+                  name: username
+                  value: john
+              - column:
+                  name: authority
+                  value: ROLE_COURIER

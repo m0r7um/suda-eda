@@ -35,7 +35,7 @@ public class OrderService {
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
         User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
-        if (seller.getRole() != Role.SELLER) throw new WrongSellerRoleException("Found user has wrong role");
+        if (seller.getRole().getAuthority() != Role.ROLE_SELLER) throw new WrongSellerRoleException("Found user has wrong role");
         Order order = new Order();
         order.setSeller(seller);
         order.setCreatedAt(LocalDateTime.now());
@@ -196,7 +196,7 @@ public class OrderService {
     private Order validateOrderUpdate(Long orderId, Long sellerId) {
         User seller = userRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("User not found"));
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
-        if (seller.getRole() != Role.SELLER) throw new WrongSellerRoleException("Found user has wrong role");
+        if (seller.getRole().getAuthority() != Role.ROLE_SELLER) throw new WrongSellerRoleException("Found user has wrong role");
 
         if (!order.getSeller().equals(seller)) {
             throw new AccessViolationException("You are not allowed to update this order");

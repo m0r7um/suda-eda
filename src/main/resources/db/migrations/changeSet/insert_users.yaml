@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-initial-users
+      author: user
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: username
+                  value: "john"
+              - column:
+                  name: password
+                  value: "{bcrypt}$2a$10$aohc8ylx1YcZx6p/L2BRv.I4oQfDin9Ed2CNTy0ZXQ3ZpdiMalLp6"
+              - column:
+                  name: enabled
+                  valueBoolean: true
+              - column:
+                  name: role_id
+                  value: "1"

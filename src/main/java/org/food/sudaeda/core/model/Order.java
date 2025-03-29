@@ -4,13 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.food.sudaeda.core.enums.OrderStatus;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
-@Service
 @Setter
 @Getter
 public class Order {
@@ -18,7 +16,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "seller_id")
     private User seller;
 

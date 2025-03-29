@@ -33,4 +33,6 @@ databaseChangeLog:
                   type: bigint
                   constraints:
                     nullable: false
-                    unique: true
+                    referencedTableName: authorities
+                    referencedColumnNames: id
+                    foreignKeyName: fk_users_authorities

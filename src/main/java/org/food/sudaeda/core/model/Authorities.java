@@ -16,7 +16,4 @@ public class Authorities {
     @Column(name = "authority")
     @Enumerated(EnumType.STRING)
     private Role authority;
-
-    @Column(name = "username")
-    private String username;
 }

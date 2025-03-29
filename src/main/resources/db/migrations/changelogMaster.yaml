@@ -1,11 +1,11 @@
 ---
 databaseChangeLog:
   - include:
-      file: changeSet/create_users_table.yaml
+      file: changeSet/create_authorities_table.yaml
       relativeToChangelogFile: true
   - include:
-        file: changeSet/create_authorities_table.yaml
-        relativeToChangelogFile: true
+      file: changeSet/create_users_table.yaml
+      relativeToChangelogFile: true
   - include:
       file: changeSet/create_orders_table.yaml
       relativeToChangelogFile: true
@@ -13,8 +13,8 @@ databaseChangeLog:
       file: changeSet/create_suggested_orders_table.yaml
       relativeToChangelogFile: true
   - include:
-      file: changeSet/insert_users.yaml
+      file: changeSet/insert_authorities.yaml
       relativeToChangelogFile: true
   - include:
-      file: changeSet/insert_authorities.yaml
+      file: changeSet/insert_users.yaml
       relativeToChangelogFile: true

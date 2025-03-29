@@ -44,7 +44,9 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsManager jdbcUserDetailsManager(DataSource dataSource) {
-        return new JdbcUserDetailsManager(dataSource);
+        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+        jdbcUserDetailsManager.setAuthoritiesByUsernameQuery("select users.username, authority from users left join authorities on users.role_id = authorities.id where users.username = ?");
+        return jdbcUserDetailsManager;
     }
 
     @Bean

@@ -7,9 +7,6 @@ databaseChangeLog:
             tableName: authorities
             columns:
               - column:
-                  name: username
-                  value: john
-              - column:
                   name: authority
                   value: ROLE_COURIER
   - changeSet:
@@ -19,9 +16,6 @@ databaseChangeLog:
         - insert:
             tableName: authorities
             columns:
-              - column:
-                  name: username
-                  value: doe
               - column:
                   name: authority
                   value: ROLE_SELLER

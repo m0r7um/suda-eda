@@ -16,7 +16,7 @@ public class OrderSuggestionController {
     private final SuggestedOrderService suggestedOrderService;
 
     @GetMapping("/pending")
-    @PreAuthorize("hasAuthority('ROLE_COURIER')")
+    @PreAuthorize("hasRole('COURIER')")
     public List<SuggestedOrderResponse> suggestedOrders(@RequestParam("courierId") Long courierId) {
         return suggestedOrderService.findPendingByCourier(courierId);
     }

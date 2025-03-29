@@ -5,6 +5,7 @@ import org.food.sudaeda.core.service.OrderService;
 import org.food.sudaeda.dto.request.*;
 import org.food.sudaeda.dto.response.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,42 +25,41 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/accept")
+    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ProcessNewOrderBySellerResponse> acceptNewOrder(
-            @PathVariable Long id,
-            @RequestBody ProcessNewOrderBySellerRequest request
+            @PathVariable Long id
     ) {
-        return ResponseEntity.ok(orderService.processNewOrder(id, request, true));
+        return ResponseEntity.ok(orderService.processNewOrder(id,true));
     }
 
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ProcessNewOrderBySellerResponse> rejectNewOrder(
-            @PathVariable Long id,
-            @RequestBody ProcessNewOrderBySellerRequest request
+            @PathVariable Long id
     ) {
-        return ResponseEntity.ok(orderService.processNewOrder(id, request, false));
+        return ResponseEntity.ok(orderService.processNewOrder(id, false));
     }
 
     @PostMapping("/{id}/mark-as-started")
+    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<MarkAsStartedResponse> markAsStarted(
-            @PathVariable Long id,
-            @RequestBody MarkAsStartedRequest request
+            @PathVariable Long id
     ) {
-        return ResponseEntity.ok(orderService.markAsStarted(id, request));
+        return ResponseEntity.ok(orderService.markAsStarted(id));
     }
 
     @PostMapping("/{id}/mark-as-ready")
+    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<MarkAsReadyResponse> markAsReady(
-            @PathVariable Long id,
-            @RequestBody MarkAsReadyRequest request
+            @PathVariable Long id
     ) {
-        return ResponseEntity.ok(orderService.markAsReady(id, request));
+        return ResponseEntity.ok(orderService.markAsReady(id));
     }
 
     @PostMapping("/{id}/mark-picked-up")
     public ResponseEntity<MarkAsPickedUpResponse> markAsPickedUp(
-            @PathVariable Long id,
-            @RequestBody MarkAsPickedUpRequest request
+            @PathVariable Long id
     ) {
-        return ResponseEntity.ok(orderService.markAsPickedUp(id, request));
+        return ResponseEntity.ok(orderService.markAsPickedUp(id));
     }
 }

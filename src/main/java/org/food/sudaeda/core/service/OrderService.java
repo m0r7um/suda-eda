@@ -19,6 +19,7 @@ import org.food.sudaeda.core.repository.UserRepository;
 import org.food.sudaeda.dto.request.*;
 import org.food.sudaeda.dto.response.*;
 import org.food.sudaeda.exception.*;
+import org.food.sudaeda.utils.SecurityUtils;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.food.sudaeda.core.model.Order;
@@ -63,8 +64,8 @@ public class OrderService {
         return orderMapper.orderToResponse(order);
     }
 
-    public ProcessNewOrderBySellerResponse processNewOrder(Long orderId, ProcessNewOrderBySellerRequest request, boolean accepted) {
-        Order order = validateOrderUpdate(orderId, request.getSellerId());
+    public ProcessNewOrderBySellerResponse processNewOrder(Long orderId, boolean accepted) {
+        Order order = validateOrderUpdate(orderId, SecurityUtils.getUserId());
 
         if (!order.getStatus().equals(OrderStatus.NEW_ORDER)) {
             throw new IllegalTransitionException("You can accept/reject only new orders");
@@ -133,18 +134,18 @@ public class OrderService {
         return freeCourier.get(0);
     }
 
-    public MarkAsStartedResponse markAsStarted(Long orderId, MarkAsStartedRequest request) {
+    public MarkAsStartedResponse markAsStarted(Long orderId) {
         Order order = updateStatus(
-                validateOrderUpdate(orderId, request.getSellerId()),
+                validateOrderUpdate(orderId, SecurityUtils.getUserId()),
                 OrderStatus.APPROVED_BY_COURIER,
                 OrderStatus.ORDER_IN_PROGRESS
         );
         return new MarkAsStartedResponse(order.getId(), order.getStatus());
     }
 
-    public MarkAsReadyResponse markAsReady(Long orderId, MarkAsReadyRequest request) {
+    public MarkAsReadyResponse markAsReady(Long orderId) {
         Order order = updateStatus(
-                validateOrderUpdate(orderId, request.getSellerId()),
+                validateOrderUpdate(orderId, SecurityUtils.getUserId()),
                 OrderStatus.ORDER_IN_PROGRESS,
                 OrderStatus.ORDER_READY
         );
@@ -175,9 +176,9 @@ public class OrderService {
         return new MarkAsReadyResponse(order.getId(), order.getStatus(), deliveryTime);
     }
 
-    public MarkAsPickedUpResponse markAsPickedUp(Long orderId, MarkAsPickedUpRequest request) {
+    public MarkAsPickedUpResponse markAsPickedUp(Long orderId) {
         Order order = updateStatus(
-                validateOrderUpdate(orderId, request.getSellerId()),
+                validateOrderUpdate(orderId, SecurityUtils.getUserId()),
                 OrderStatus.ORDER_READY,
                 OrderStatus.ORDER_PICKED_UP_BY_COURIER
         );

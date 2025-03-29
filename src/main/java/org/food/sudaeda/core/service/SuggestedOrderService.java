@@ -10,6 +10,7 @@ import org.food.sudaeda.core.repository.OrderRepository;
 import org.food.sudaeda.core.repository.SuggestedOrdersRepository;
 import org.food.sudaeda.dto.response.SuggestedOrderResponse;
 import org.food.sudaeda.exception.NotFoundException;
+import org.food.sudaeda.utils.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,8 +20,8 @@ public class SuggestedOrderService {
     private final SuggestedOrdersRepository suggestedOrdersRepository;
     private final OrderRepository orderRepository;
 
-    public List<SuggestedOrderResponse> findPendingByCourier(Long courierId) {
-        List<SuggestedOrder> suggestedPendingOrders = suggestedOrdersRepository.findByCourier_IdAndStatus(courierId, SuggestedOrderStatus.PENDING);
+    public List<SuggestedOrderResponse> findPendingByCourier() {
+        List<SuggestedOrder> suggestedPendingOrders = suggestedOrdersRepository.findByCourier_IdAndStatus(SecurityUtils.getUserId(), SuggestedOrderStatus.PENDING);
         return suggestedPendingOrders.stream().map(
                 (suggestedOrder) -> new SuggestedOrderResponse(
                         suggestedOrder.getId(),

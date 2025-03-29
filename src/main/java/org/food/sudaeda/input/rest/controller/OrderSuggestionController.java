@@ -17,11 +17,12 @@ public class OrderSuggestionController {
 
     @GetMapping("/pending")
     @PreAuthorize("hasRole('COURIER')")
-    public List<SuggestedOrderResponse> suggestedOrders(@RequestParam("courierId") Long courierId) {
-        return suggestedOrderService.findPendingByCourier(courierId);
+    public List<SuggestedOrderResponse> suggestedOrders() {
+        return suggestedOrderService.findPendingByCourier();
     }
 
     @PostMapping("/{id}/accept")
+    @PreAuthorize("hasRole('COURIER')")
     public SuggestedOrderResponse acceptSuggestedOrder(@PathVariable Long id) {
         return suggestedOrderService.acceptSuggestion(id);
     }

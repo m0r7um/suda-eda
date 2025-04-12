@@ -1,43 +1,51 @@
 package org.food.sudaeda.configuration;
 
-import com.zaxxer.hikari.HikariDataSource;
+import com.atomikos.jdbc.AtomikosDataSourceBean;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.postgresql.xa.PGXADataSource;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableJpaRepositories(
         basePackages = "org.food.sudaeda.analytics.repository",
         entityManagerFactoryRef = "analyticsEntityManagerFactory",
-        transactionManagerRef = "analyticsTransactionManager"
+        transactionManagerRef = "transactionManager"
 )
 public class AnalyticsDataSourceConfig {
 
-    @Bean
-    public EntityManagerFactoryBuilder analyticsEntityManagerFactoryBuilder() {
-        return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), new HashMap<>(), null);
+    @Value("${analytics-datasource.jdbc-url}")
+    private String analyticsUrl;
+
+    @Value("${analytics-datasource.username}")
+    private String username;
+
+    @Value("${analytics-datasource.password}")
+    private String password;
+
+    public Map<String, String> jpaProperties() {
+        Map<String, String> jpaProperties = new HashMap<>();
+        jpaProperties.put("hibernate.hbm2ddl.auto", "none");
+        jpaProperties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        jpaProperties.put("hibernate.temp.use_jdbc_metadata_defaults", "false");
+        jpaProperties.put("javax.persistence.transactionType", "JTA");
+        return jpaProperties;
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "spring.analytics-datasource")
-    public DataSource analyticsDataSource() {
-        return DataSourceBuilder
-                .create()
-                .type(HikariDataSource.class)
-                .build();
+    public EntityManagerFactoryBuilder analyticsEntityManagerFactoryBuilder() {
+        return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), jpaProperties(), null);
     }
 
     @Bean
@@ -48,13 +56,29 @@ public class AnalyticsDataSourceConfig {
                 .dataSource(dataSource)
                 .packages("org.food.sudaeda.analytics.model")
                 .persistenceUnit("analytics")
+                .properties(jpaProperties())
+                .jta(true)
                 .build();
     }
 
-    @Bean
-    public PlatformTransactionManager analyticsTransactionManager(
-            @Qualifier("analyticsEntityManagerFactory") LocalContainerEntityManagerFactoryBean analyticsEntityManagerFactory) {
-        return new JpaTransactionManager(analyticsEntityManagerFactory.getObject());
+    @Bean("analyticsDataSourceProperties")
+    public DataSourceProperties analyticsDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean("analyticsDataSource")
+    public DataSource analyticsDataSource(@Qualifier("analyticsDataSourceProperties") DataSourceProperties dataSourceProperties) {
+        PGXADataSource pgxaDataSource = new PGXADataSource();
+        pgxaDataSource.setUrl(analyticsUrl);
+        pgxaDataSource.setUser(username);
+        pgxaDataSource.setPassword(password);
+
+        AtomikosDataSourceBean xaDataSource = new AtomikosDataSourceBean();
+        xaDataSource.setXaDataSource(pgxaDataSource);
+        xaDataSource.setUniqueResourceName("xa_analytics");
+        xaDataSource.setMinPoolSize(5);
+        xaDataSource.setMaxPoolSize(20);
+        return xaDataSource;
     }
 
     @Bean

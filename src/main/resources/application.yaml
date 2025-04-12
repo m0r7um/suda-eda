@@ -3,23 +3,21 @@ spring:
     name: suda-eda
   liquibase:
     enabled: false
-  datasource:
-    jdbc-url: jdbc:postgresql://localhost:5432/studs
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
-  analytics-datasource:
-    jdbc-url: jdbc:postgresql://localhost:5432/analytics
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
+
+datasource:
+  jdbc-url: jdbc:postgresql://localhost:5432/studs
+  username: postgres
+  password: postgres
+
+analytics-datasource:
+  jdbc-url: jdbc:postgresql://localhost:5432/analytics
+  username: postgres
+  password: postgres
+
 springdoc:
   swagger-ui:
     path: '/swagger-ui'
+
 logging:
   level:
     root: info

@@ -21,6 +21,7 @@ import org.food.sudaeda.dto.request.*;
 import org.food.sudaeda.dto.response.*;
 import org.food.sudaeda.exception.*;
 import org.food.sudaeda.utils.SecurityUtils;
+import org.food.sudaeda.utils.TransactionHelper;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.food.sudaeda.core.model.Order;
@@ -35,33 +36,52 @@ public class OrderService {
     private final DeliveryService deliveryService;
     private final OrderUpdateService orderUpdateService;
     private final OrderMapper orderMapper;
+    private final TransactionHelper transactionHelper;
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
         User seller = userRepository.findById(request.getSellerId()).orElseThrow(() -> new NotFoundException("User not found"));
-        if (seller.getRole().getAuthority() != Role.ROLE_SELLER) throw new WrongSellerRoleException("Found user has wrong role");
+        if (seller.getRole().getAuthority() != Role.ROLE_SELLER)
+            throw new WrongSellerRoleException("Found user has wrong role");
         Order order = new Order();
         order.setSeller(seller);
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.NEW_ORDER);
-        Order savedOrder = orderRepository.save(order);
-        // TODO distributed transaction
-        orderUpdateService.add(savedOrder.getId(), null, OrderStatus.NEW_ORDER);
+
+        var status = transactionHelper.createTransaction("createOrder");
+        Order savedOrder;
+        try {
+            savedOrder = orderRepository.save(order);
+            orderUpdateService.add(savedOrder.getId(), null, OrderStatus.NEW_ORDER);
+            transactionHelper.commit(status);
+        } catch (Exception e) {
+            transactionHelper.rollback(status);
+            throw e;
+        }
+
         new Thread(
-                () -> {
-                    try {
-                        Thread.sleep(Duration.ofMinutes(10).toMillis());
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+            () -> {
+                try {
+                    Thread.sleep(Duration.ofMinutes(10).toMillis());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                var updateStatus = transactionHelper.createTransaction("updateStatusSellerNotAnswered", 3);
+                try {
                     Order foundOrder = orderRepository.findById(savedOrder.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
                     if (foundOrder.getStatus() == OrderStatus.NEW_ORDER) {
                         foundOrder.setStatus(OrderStatus.SELLER_NOT_ANSWERED);
-                        // TODO distributed transaction
                         orderUpdateService.add(foundOrder.getId(), OrderStatus.NEW_ORDER, OrderStatus.SELLER_NOT_ANSWERED);
                     }
                     orderRepository.save(foundOrder);
+                    transactionHelper.commit(updateStatus);
+                } catch (Exception e) {
+                    transactionHelper.rollback(updateStatus);
+                    throw e;
                 }
+            }
         ).start();
+
         return new CreateOrderResponse(savedOrder.getId());
     }
 
@@ -84,21 +104,37 @@ public class OrderService {
     }
 
     private ProcessNewOrderBySellerResponse acceptNewOrder(Order order) {
-        order.setStatus(OrderStatus.APPROVED_BY_SELLER);
-        // TODO distributed transaction
-        orderUpdateService.add(order.getId(), OrderStatus.NEW_ORDER, OrderStatus.APPROVED_BY_SELLER);
+        var status = transactionHelper.createTransaction("acceptNewOrder");
 
-        findCourier(order);
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder;
+        try {
+            order.setStatus(OrderStatus.APPROVED_BY_SELLER);
+            orderUpdateService.add(order.getId(), OrderStatus.NEW_ORDER, OrderStatus.APPROVED_BY_SELLER);
+            savedOrder = orderRepository.save(order);
+            transactionHelper.commit(status);
+        } catch (Exception e) {
+            transactionHelper.rollback(status);
+            throw e;
+        }
+
+        findCourier(savedOrder);
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
     }
 
     private ProcessNewOrderBySellerResponse rejectNewOrder(Order order) {
-        order.setStatus(OrderStatus.REJECTED_BY_SELLER);
-        // TODO distributed transaction
-        orderUpdateService.add(order.getId(), OrderStatus.NEW_ORDER, OrderStatus.REJECTED_BY_SELLER);
+        var status = transactionHelper.createTransaction("rejectNewOrder");
 
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder;
+        try {
+            order.setStatus(OrderStatus.REJECTED_BY_SELLER);
+            orderUpdateService.add(order.getId(), OrderStatus.NEW_ORDER, OrderStatus.REJECTED_BY_SELLER);
+            savedOrder = orderRepository.save(order);
+            transactionHelper.commit(status);
+        } catch (Exception e) {
+            transactionHelper.rollback(status);
+            throw e;
+        }
+
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
     }
 
@@ -124,10 +160,18 @@ public class OrderService {
                     suggestedOrdersRepository.save(newOrderSuggestion);
                 } else {
                     SuggestedOrder suggestedOrder = orderSuggestion.get();
+
                     if (suggestedOrder.getStatus().equals(SuggestedOrderStatus.ACCEPTED)) {
-                        order.setStatus(OrderStatus.APPROVED_BY_COURIER);
-                        // TODO distributed transaction
-                        orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.APPROVED_BY_COURIER);
+                        var status = transactionHelper.createTransaction("suggestedOrderAccepted");
+                        try {
+                            order.setStatus(OrderStatus.APPROVED_BY_COURIER);
+                            orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.APPROVED_BY_COURIER);
+                            orderRepository.save(order);
+                            transactionHelper.commit(status);
+                        } catch (Exception e) {
+                            transactionHelper.rollback(status);
+                            throw e;
+                        }
 
                         log.debug("Courier found {}", suggestedOrder.getCourier().getId());
                         cancel();
@@ -136,9 +180,16 @@ public class OrderService {
                 }
 
                 if (start.compareTo(finish) > 0) {
-                    order.setStatus(OrderStatus.COURIER_NOT_FOUND);
-                    // TODO distributed transaction
-                    orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.COURIER_NOT_FOUND);
+                    var status = transactionHelper.createTransaction("courierNotfound");
+                    try {
+                        order.setStatus(OrderStatus.COURIER_NOT_FOUND);
+                        orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.COURIER_NOT_FOUND);
+                        orderRepository.save(order);
+                        transactionHelper.commit(status);
+                    } catch (Exception e) {
+                        transactionHelper.rollback(status);
+                        throw e;
+                    }
 
                     cancel();
                 }
@@ -185,12 +236,19 @@ public class OrderService {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            if (foundOrder.getStatus() == OrderStatus.ORDER_READY) {
-                foundOrder.setStatus(OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
-                // TODO distributed transaction
-                orderUpdateService.add(foundOrder.getId(), OrderStatus.APPROVED_BY_COURIER, OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
+
+            var status = transactionHelper.createTransaction("markAsReady");
+            try {
+                if (foundOrder.getStatus() == OrderStatus.ORDER_READY) {
+                    foundOrder.setStatus(OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
+                    orderUpdateService.add(foundOrder.getId(), OrderStatus.APPROVED_BY_COURIER, OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
+                    orderRepository.save(order);
+                }
+                transactionHelper.commit(status);
+            } catch (Exception e) {
+                transactionHelper.rollback(status);
+                throw e;
             }
-            orderRepository.save(foundOrder);
         }).start();
 
         return new MarkAsReadyResponse(order.getId(), order.getStatus(), deliveryTime);
@@ -210,11 +268,20 @@ public class OrderService {
             throw new IllegalTransitionException("Transition between statuses " + fromStatus + " and " + toStatus + "is not allowed.");
         }
 
-        order.setStatus(toStatus);
-        // TODO distributed transaction
-        orderUpdateService.add(order.getId(), fromStatus, toStatus);
+        var status = transactionHelper.createTransaction("updateStatus");
 
-        return orderRepository.save(order);
+        Order savedOrder;
+        try {
+            order.setStatus(toStatus);
+            orderUpdateService.add(order.getId(), fromStatus, toStatus);
+            savedOrder = orderRepository.save(order);
+            transactionHelper.commit(status);
+        } catch (Exception e) {
+            transactionHelper.rollback(status);
+            throw e;
+        }
+
+        return savedOrder;
     }
 
     private Order validateOrderUpdate(Long orderId, Long sellerId) {

@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+    @SequenceGenerator(name = "mySeqGen", sequenceName = "orders_id_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne

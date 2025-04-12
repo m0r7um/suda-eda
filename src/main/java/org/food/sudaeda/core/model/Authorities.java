@@ -11,6 +11,8 @@ import org.food.sudaeda.core.enums.Role;
 @Getter
 public class Authorities {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+    @SequenceGenerator(name = "mySeqGen", sequenceName = "authorities_id_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "authority")

@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+    @SequenceGenerator(name = "mySeqGen", sequenceName = "users_id_seq", allocationSize = 1)
     private Long id;
 
     @Column(unique = true, nullable = false)

@@ -57,6 +57,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/mark-picked-up")
+    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<MarkAsPickedUpResponse> markAsPickedUp(
             @PathVariable Long id
     ) {

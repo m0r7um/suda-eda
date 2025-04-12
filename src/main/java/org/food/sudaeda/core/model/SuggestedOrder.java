@@ -11,7 +11,8 @@ import org.food.sudaeda.core.enums.SuggestedOrderStatus;
 @Setter
 public class SuggestedOrder {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+    @SequenceGenerator(name = "mySeqGen", sequenceName = "suggested_orders_id_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne

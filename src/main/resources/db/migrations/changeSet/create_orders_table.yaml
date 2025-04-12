@@ -12,6 +12,7 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
                     nullable: false
+                  autoIncrement: true
               - column:
                   name: created_at
                   type: timestamp(6)

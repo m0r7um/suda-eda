@@ -23,7 +23,7 @@ public class OrderUpdate {
     @Column(nullable = false)
     private Long orderId;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     private OrderStatus fromStatus;
 

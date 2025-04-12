@@ -12,7 +12,6 @@ import org.food.sudaeda.dto.response.SuggestedOrderResponse;
 import org.food.sudaeda.exception.NotFoundException;
 import org.food.sudaeda.utils.SecurityUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +30,6 @@ public class SuggestedOrderService {
         ).toList();
     }
 
-    @Transactional
     public SuggestedOrderResponse acceptSuggestion(Long suggestedOrderId) {
         SuggestedOrder suggestedOrder = suggestedOrdersRepository.findById(suggestedOrderId).orElseThrow(() -> new NotFoundException("Suggested order not found " + suggestedOrderId));
         suggestedOrder.setStatus(SuggestedOrderStatus.ACCEPTED);

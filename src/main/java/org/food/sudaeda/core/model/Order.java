@@ -21,8 +21,10 @@ public class Order {
     @JoinColumn(name = "seller_id")
     private User seller;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "delivery_time")
     private LocalDateTime deliveryTime;
 
     @Enumerated(EnumType.STRING)

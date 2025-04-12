@@ -13,13 +13,8 @@ public class TransactionHelper {
     private final PlatformTransactionManager txManager;
 
     public TransactionStatus createTransaction(String transactionName) {
-        return createTransaction(transactionName, 2);
-    }
-
-    public TransactionStatus createTransaction(String transactionName, int isolationLevel) {
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName(transactionName);
-        def.setIsolationLevel(isolationLevel);
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         return txManager.getTransaction(def);
     }

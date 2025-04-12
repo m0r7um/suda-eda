@@ -66,7 +66,7 @@ public class OrderService {
                     throw new RuntimeException(e);
                 }
 
-                var updateStatus = transactionHelper.createTransaction("updateStatusSellerNotAnswered", 3);
+                var updateStatus = transactionHelper.createTransaction("updateStatusSellerNotAnswered");
                 try {
                     Order foundOrder = orderRepository.findById(savedOrder.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
                     if (foundOrder.getStatus() == OrderStatus.NEW_ORDER) {

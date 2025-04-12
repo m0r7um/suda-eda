@@ -31,6 +31,6 @@ public class OrderUpdate {
     @Enumerated(EnumType.STRING)
     private OrderStatus toStatus;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "created_at")
     private LocalDateTime createdAt;
 }

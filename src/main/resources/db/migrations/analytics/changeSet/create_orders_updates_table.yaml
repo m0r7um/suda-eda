@@ -22,13 +22,12 @@ databaseChangeLog:
                   name: from_status
                   type: varchar(255)
                   constraints:
-                    checkConstraint: "status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
-                    nullable: false
+                    checkConstraint: "from_status IS NULL OR from_status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
               - column:
                   name: to_status
                   type: varchar(255)
                   constraints:
-                    checkConstraint: "status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
+                    checkConstraint: "to_status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
                     nullable: false
               - column:
                   name: created_at

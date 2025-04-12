@@ -20,14 +20,14 @@ public class OrderUpdate {
     @SequenceGenerator(name = "orders_updates_id_seq", sequenceName = "orders_updates_id_seq", allocationSize = 1)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "order_id")
     private Long orderId;
 
-    @Column
+    @Column(name = "from_status")
     @Enumerated(EnumType.STRING)
     private OrderStatus fromStatus;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "to_status")
     @Enumerated(EnumType.STRING)
     private OrderStatus toStatus;
 

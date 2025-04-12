@@ -1,0 +1,2 @@
+CREATE DATABASE studs;
+CREATE DATABASE analytics;

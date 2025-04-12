@@ -1,0 +1,5 @@
+---
+databaseChangeLog:
+  - include:
+      file: changeSet/create_orders_updates_table.yaml
+      relativeToChangelogFile: true

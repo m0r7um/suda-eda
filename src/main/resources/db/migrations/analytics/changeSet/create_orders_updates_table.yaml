@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-orders-updates-table
+      author: maxbarsukov
+      changes:
+        - createTable:
+            tableName: orders_updates
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  autoIncrement: true
+              - column:
+                  name: order_id
+                  type: bigint
+              - column:
+                  name: from_status
+                  type: varchar(255)
+                  constraints:
+                    checkConstraint: "status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
+              - column:
+                  name: to_status
+                  type: varchar(255)
+                  constraints:
+                    checkConstraint: "status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
+              - column:
+                  name: created_at
+                  type: timestamp(6)

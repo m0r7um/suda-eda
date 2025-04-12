@@ -265,7 +265,7 @@ public class OrderService {
 
     private Order updateStatus(Order order, OrderStatus fromStatus, OrderStatus toStatus) {
         if (!order.getStatus().equals(fromStatus)) {
-            throw new IllegalTransitionException("Transition between statuses " + fromStatus + " and " + toStatus + "is not allowed.");
+            throw new IllegalTransitionException("Transition between statuses " + fromStatus + " and " + toStatus + "is not allowed. Current status: " + order.getStatus());
         }
 
         var status = transactionHelper.createTransaction("updateStatus");
@@ -273,8 +273,8 @@ public class OrderService {
         Order savedOrder;
         try {
             order.setStatus(toStatus);
-            orderUpdateService.add(order.getId(), fromStatus, toStatus);
             savedOrder = orderRepository.save(order);
+            orderUpdateService.add(savedOrder.getId(), fromStatus, toStatus);
             transactionHelper.commit(status);
         } catch (Exception e) {
             transactionHelper.rollback(status);

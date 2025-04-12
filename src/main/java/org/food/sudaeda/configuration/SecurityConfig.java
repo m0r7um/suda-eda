@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.core.repository.UserRepository;
 import org.food.sudaeda.security.FixBasicAuthFilter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -43,7 +44,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsManager jdbcUserDetailsManager(DataSource dataSource) {
+    public UserDetailsManager jdbcUserDetailsManager(@Qualifier("primaryDataSource") DataSource dataSource) {
         JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
         jdbcUserDetailsManager.setAuthoritiesByUsernameQuery("select users.username, authority from users left join authorities on users.role_id = authorities.id where users.username = ?");
         return jdbcUserDetailsManager;

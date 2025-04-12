@@ -2,13 +2,17 @@ spring:
   application:
     name: suda-eda
   liquibase:
-    enabled: true
-    change-log: classpath:/db/migrations/changelogMaster.yaml
+    enabled: false
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/studs
+    jdbc-url: jdbc:postgresql://localhost:5432/studs
     username: postgres
     password: postgres
+    driver-class-name: org.postgresql.Driver
+  analytics-datasource:
+    jdbc-url: jdbc:postgresql://localhost:5432/analytics
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: none
@@ -19,3 +23,9 @@ springdoc:
 logging:
   level:
     root: info
+
+liquibase:
+  primary:
+    change-log: classpath:/db/migrations/primary/changelogMaster.yaml
+  analytics:
+    change-log: classpath:/db/migrations/analytics/changelogMaster.yaml

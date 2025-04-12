@@ -7,6 +7,7 @@ import java.util.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.food.sudaeda.analytics.service.OrderUpdateService;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.food.sudaeda.core.enums.Role;
 import org.food.sudaeda.core.enums.SuggestedOrderStatus;
@@ -32,6 +33,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final SuggestedOrdersRepository suggestedOrdersRepository;
     private final DeliveryService deliveryService;
+    private final OrderUpdateService orderUpdateService;
     private final OrderMapper orderMapper;
 
     public CreateOrderResponse createNewOrder(CreateOrderRequest request) {
@@ -42,6 +44,8 @@ public class OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.NEW_ORDER);
         Order savedOrder = orderRepository.save(order);
+        // TODO distributed transaction
+        orderUpdateService.add(savedOrder.getId(), null, OrderStatus.NEW_ORDER);
         new Thread(
                 () -> {
                     try {
@@ -52,6 +56,8 @@ public class OrderService {
                     Order foundOrder = orderRepository.findById(savedOrder.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
                     if (foundOrder.getStatus() == OrderStatus.NEW_ORDER) {
                         foundOrder.setStatus(OrderStatus.SELLER_NOT_ANSWERED);
+                        // TODO distributed transaction
+                        orderUpdateService.add(foundOrder.getId(), OrderStatus.NEW_ORDER, OrderStatus.SELLER_NOT_ANSWERED);
                     }
                     orderRepository.save(foundOrder);
                 }
@@ -79,6 +85,9 @@ public class OrderService {
 
     private ProcessNewOrderBySellerResponse acceptNewOrder(Order order) {
         order.setStatus(OrderStatus.APPROVED_BY_SELLER);
+        // TODO distributed transaction
+        orderUpdateService.add(order.getId(), OrderStatus.NEW_ORDER, OrderStatus.APPROVED_BY_SELLER);
+
         findCourier(order);
         Order savedOrder = orderRepository.save(order);
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
@@ -86,6 +95,9 @@ public class OrderService {
 
     private ProcessNewOrderBySellerResponse rejectNewOrder(Order order) {
         order.setStatus(OrderStatus.REJECTED_BY_SELLER);
+        // TODO distributed transaction
+        orderUpdateService.add(order.getId(), OrderStatus.NEW_ORDER, OrderStatus.REJECTED_BY_SELLER);
+
         Order savedOrder = orderRepository.save(order);
         return new ProcessNewOrderBySellerResponse(savedOrder.getId(), savedOrder.getStatus());
     }
@@ -114,6 +126,9 @@ public class OrderService {
                     SuggestedOrder suggestedOrder = orderSuggestion.get();
                     if (suggestedOrder.getStatus().equals(SuggestedOrderStatus.ACCEPTED)) {
                         order.setStatus(OrderStatus.APPROVED_BY_COURIER);
+                        // TODO distributed transaction
+                        orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.APPROVED_BY_COURIER);
+
                         log.debug("Courier found {}", suggestedOrder.getCourier().getId());
                         cancel();
                     }
@@ -122,6 +137,9 @@ public class OrderService {
 
                 if (start.compareTo(finish) > 0) {
                     order.setStatus(OrderStatus.COURIER_NOT_FOUND);
+                    // TODO distributed transaction
+                    orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.COURIER_NOT_FOUND);
+
                     cancel();
                 }
             }
@@ -169,6 +187,8 @@ public class OrderService {
             }
             if (foundOrder.getStatus() == OrderStatus.ORDER_READY) {
                 foundOrder.setStatus(OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
+                // TODO distributed transaction
+                orderUpdateService.add(foundOrder.getId(), OrderStatus.APPROVED_BY_COURIER, OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
             }
             orderRepository.save(foundOrder);
         }).start();
@@ -191,6 +211,9 @@ public class OrderService {
         }
 
         order.setStatus(toStatus);
+        // TODO distributed transaction
+        orderUpdateService.add(order.getId(), fromStatus, toStatus);
+
         return orderRepository.save(order);
     }
 

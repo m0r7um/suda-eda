@@ -10,3 +10,14 @@ services:
       - "5432:5432"
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+  artemis:
+    image: apache/activemq-artemis:2.31.2
+    container_name: artemis
+    environment:
+      ARTEMIS_USER: admin
+      ARTEMIS_PASSWORD: admin
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+      - "5672:5672"
+    restart: unless-stopped

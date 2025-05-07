@@ -3,6 +3,11 @@ spring:
     name: suda-eda
   liquibase:
     enabled: false
+  artemis:
+    broker-url: amqp://localhost:5672
+    user: admin
+    password: admin
+    mode: native
 
 datasource:
   jdbc-url: jdbc:postgresql://localhost:5432/studs

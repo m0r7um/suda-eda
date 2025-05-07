@@ -1,6 +1,6 @@
 HELP.md
 target/
-!.mvn/wrapper/maven-wrapper.jar
+!order-service/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -14,7 +14,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+order-service/.idea
 *.iws
 *.iml
 *.ipr
@@ -33,4 +33,8 @@ build/
 .vscode/
 
 ### Misc ###
-atomikos-logs/*
+order-service/atomikos-logs/*
+
+/out/
+/.idea/
+/atomikos-logs

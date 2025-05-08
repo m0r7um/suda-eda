@@ -1,18 +1,17 @@
 package org.food.sudaeda.core.service;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.*;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.quartz.*;
+
 import org.food.sudaeda.analytics.service.OrderUpdateService;
 import org.food.sudaeda.core.enums.OrderStatus;
 import org.food.sudaeda.core.enums.Role;
-import org.food.sudaeda.core.enums.SuggestedOrderStatus;
+import org.food.sudaeda.core.jobs.CourierFindingJob;
+import org.food.sudaeda.core.jobs.DeliveryCheckJob;
+import org.food.sudaeda.core.jobs.OrderTimeoutJob;
 import org.food.sudaeda.core.mappers.OrderMapper;
-import org.food.sudaeda.core.model.SuggestedOrder;
 import org.food.sudaeda.core.model.User;
 import org.food.sudaeda.core.repository.OrderRepository;
 import org.food.sudaeda.core.repository.SuggestedOrdersRepository;
@@ -22,14 +21,19 @@ import org.food.sudaeda.dto.response.*;
 import org.food.sudaeda.exception.*;
 import org.food.sudaeda.utils.SecurityUtils;
 import org.food.sudaeda.utils.TransactionHelper;
-import org.springframework.data.domain.Limit;
-import org.springframework.stereotype.Service;
 import org.food.sudaeda.core.model.Order;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class OrderService {
+    private final Scheduler scheduler;
+
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final SuggestedOrdersRepository suggestedOrdersRepository;
@@ -58,31 +62,26 @@ public class OrderService {
             throw e;
         }
 
-        new Thread(
-            () -> {
-                try {
-                    Thread.sleep(Duration.ofMinutes(10).toMillis());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                var updateStatus = transactionHelper.createTransaction("updateStatusSellerNotAnswered");
-                try {
-                    Order foundOrder = orderRepository.findById(savedOrder.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
-                    if (foundOrder.getStatus() == OrderStatus.NEW_ORDER) {
-                        foundOrder.setStatus(OrderStatus.SELLER_NOT_ANSWERED);
-                        orderUpdateService.add(foundOrder.getId(), OrderStatus.NEW_ORDER, OrderStatus.SELLER_NOT_ANSWERED);
-                    }
-                    orderRepository.save(foundOrder);
-                    transactionHelper.commit(updateStatus);
-                } catch (Exception e) {
-                    transactionHelper.rollback(updateStatus);
-                    throw e;
-                }
-            }
-        ).start();
-
+        scheduleOrderTimeoutCheck(savedOrder.getId());
         return new CreateOrderResponse(savedOrder.getId());
+    }
+
+    private void scheduleOrderTimeoutCheck(Long orderId) {
+        JobDetail job = JobBuilder.newJob(OrderTimeoutJob.class)
+                .withIdentity("orderTimeout-" + orderId)
+                .usingJobData(createCommonJobDataMap())
+                .usingJobData("orderId", orderId)
+                .build();
+
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .startAt(Date.from(Instant.now().plus(Duration.ofMinutes(10))))
+                .build();
+
+        try {
+            scheduler.scheduleJob(job, trigger);
+        } catch (SchedulerException e) {
+            throw new RuntimeException("Failed to schedule order timeout check", e);
+        }
     }
 
     public GetOrderResponse getOrderById(Long id) {
@@ -139,68 +138,25 @@ public class OrderService {
     }
 
     private void findCourier(Order order) {
-        log.debug("Started courier finding");
-        new Timer().schedule(new TimerTask() {
-            final Instant start = Instant.now();
-            final Instant finish = Instant.now().plusSeconds(FINDING_SCHEDULE_TIMEOUT_SECONDS);
-            @Override
-            public void run() {
-                log.debug("Attempt to find courier");
-                Optional<SuggestedOrder> orderSuggestion = suggestedOrdersRepository.findByOrderAndStatusNot(
-                        order,
-                        SuggestedOrderStatus.REJECTED
-                );
-                if (orderSuggestion.isEmpty()) {
-                    log.debug("No suggested order found with not rejected status");
-                    SuggestedOrder newOrderSuggestion = new SuggestedOrder();
-                    User courier = findCourier();
-                    newOrderSuggestion.setCourier(courier);
-                    newOrderSuggestion.setOrder(order);
-                    newOrderSuggestion.setStatus(SuggestedOrderStatus.PENDING);
-                    suggestedOrdersRepository.save(newOrderSuggestion);
-                } else {
-                    SuggestedOrder suggestedOrder = orderSuggestion.get();
+        JobDetail job = JobBuilder.newJob(CourierFindingJob.class)
+                .withIdentity("courierFinding-" + order.getId())
+                .usingJobData(createCommonJobDataMap())
+                .usingJobData("orderId", order.getId())
+                .build();
 
-                    if (suggestedOrder.getStatus().equals(SuggestedOrderStatus.ACCEPTED)) {
-                        var status = transactionHelper.createTransaction("suggestedOrderAccepted");
-                        try {
-                            order.setStatus(OrderStatus.APPROVED_BY_COURIER);
-                            orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.APPROVED_BY_COURIER);
-                            orderRepository.save(order);
-                            transactionHelper.commit(status);
-                        } catch (Exception e) {
-                            transactionHelper.rollback(status);
-                            throw e;
-                        }
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .startNow()
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                        .withIntervalInMilliseconds(FINDING_SCHEDULE_PERIOD_MILLIS)
+                        .repeatForever())
+                .endAt(Date.from(Instant.now().plusSeconds(FINDING_SCHEDULE_TIMEOUT_SECONDS)))
+                .build();
 
-                        log.debug("Courier found {}", suggestedOrder.getCourier().getId());
-                        cancel();
-                    }
-                    return;
-                }
-
-                if (start.compareTo(finish) > 0) {
-                    var status = transactionHelper.createTransaction("courierNotfound");
-                    try {
-                        order.setStatus(OrderStatus.COURIER_NOT_FOUND);
-                        orderUpdateService.add(order.getId(), OrderStatus.APPROVED_BY_SELLER, OrderStatus.COURIER_NOT_FOUND);
-                        orderRepository.save(order);
-                        transactionHelper.commit(status);
-                    } catch (Exception e) {
-                        transactionHelper.rollback(status);
-                        throw e;
-                    }
-
-                    cancel();
-                }
-            }
-        },0, FINDING_SCHEDULE_PERIOD_MILLIS);
-    }
-
-    private User findCourier() {
-        List<User> freeCourier = userRepository.findFreeCouriers(Limit.of(1));
-        if (freeCourier.isEmpty()) throw new NotFoundException("Free courier not found");
-        return freeCourier.get(0);
+        try {
+            scheduler.scheduleJob(job, trigger);
+        } catch (SchedulerException e) {
+            throw new RuntimeException("Failed to schedule courier finding", e);
+        }
     }
 
     public MarkAsStartedResponse markAsStarted(Long orderId) {
@@ -222,36 +178,43 @@ public class OrderService {
         order.setDeliveryTime(deliveryTime);
         orderRepository.save(order);
 
-        new Thread(() -> {
-            Order foundOrder = orderRepository.findById(order.getId()).orElseThrow(() -> new NotFoundException("Order not found"));
-
-            try {
-                Duration orderDeliveryTime = Duration.between(LocalDateTime.now(), foundOrder.getDeliveryTime());
-                Duration deliveryTimeDeadline = Collections.max(Arrays.asList(
-                        orderDeliveryTime,
-                        deliveryService.getDeliveryTime(foundOrder)
-                ), Duration::compareTo);
-
-                Thread.sleep(deliveryTimeDeadline.toMillis());
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            var status = transactionHelper.createTransaction("markAsReady");
-            try {
-                if (foundOrder.getStatus() == OrderStatus.ORDER_READY) {
-                    foundOrder.setStatus(OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
-                    orderUpdateService.add(foundOrder.getId(), OrderStatus.APPROVED_BY_COURIER, OrderStatus.ORDER_NOT_PICKED_UP_BY_COURIER);
-                    orderRepository.save(order);
-                }
-                transactionHelper.commit(status);
-            } catch (Exception e) {
-                transactionHelper.rollback(status);
-                throw e;
-            }
-        }).start();
-
+        scheduleDeliveryCheck(order.getId(), deliveryTime);
         return new MarkAsReadyResponse(order.getId(), order.getStatus(), deliveryTime);
+    }
+
+    private void scheduleDeliveryCheck(Long orderId, LocalDateTime deliveryTime) {
+        try {
+            Order foundOrder = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new NotFoundException("Order not found"));
+
+            // Рассчитываем оставшееся время до указанной даты доставки
+            Duration orderDeliveryDuration = Duration.between(LocalDateTime.now(), deliveryTime);
+
+            // Получаем стандартное время доставки из сервиса
+            Duration serviceDeliveryDuration = deliveryService.getDeliveryTime(foundOrder);
+
+            // Выбираем максимальную длительность
+            Duration finalDuration = Collections.max(
+                    Arrays.asList(orderDeliveryDuration, serviceDeliveryDuration),
+                    Duration::compareTo
+            );
+
+            // Создаем триггер с рассчитанной задержкой
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .startAt(Date.from(Instant.now().plus(finalDuration)))
+                    .build();
+
+            // Создаем задание с передачей orderId
+            JobDetail job = JobBuilder.newJob(DeliveryCheckJob.class)
+                    .withIdentity("deliveryCheck-" + orderId)
+                    .usingJobData(createCommonJobDataMap())
+                    .usingJobData("orderId", orderId)
+                    .build();
+
+            scheduler.scheduleJob(job, trigger);
+        } catch (SchedulerException | NotFoundException e) {
+            throw new RuntimeException("Failed to schedule delivery check", e);
+        }
     }
 
     public MarkAsPickedUpResponse markAsPickedUp(Long orderId) {
@@ -292,6 +255,17 @@ public class OrderService {
         }
 
         return order;
+    }
+
+    private JobDataMap createCommonJobDataMap() {
+        JobDataMap dataMap = new JobDataMap();
+        dataMap.put("orderRepository", orderRepository);
+        dataMap.put("userRepository", userRepository);
+        dataMap.put("suggestedOrdersRepository", suggestedOrdersRepository);
+        dataMap.put("transactionHelper", transactionHelper);
+        dataMap.put("orderUpdateService", orderUpdateService);
+        dataMap.put("deliveryService", deliveryService);
+        return dataMap;
     }
 
     private static final Integer FINDING_SCHEDULE_TIMEOUT_SECONDS = 10 * 60;

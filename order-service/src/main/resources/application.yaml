@@ -8,6 +8,11 @@ spring:
     user: admin
     password: admin
     mode: native
+  quartz:
+    job-store-type: memory
+    properties:
+      org.quartz.threadPool.threadCount: 5
+    wait-for-jobs-to-complete-on-shutdown: true
 
 datasource:
   jdbc-url: jdbc:postgresql://localhost:5432/studs

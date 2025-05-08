@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: insert-initial-users
-      author: user
+      author: martin.valts
       changes:
         - insert:
             tableName: users
@@ -21,9 +21,12 @@ databaseChangeLog:
               - column:
                   name: role_id
                   value: "1"
+              - column:
+                  name: email
+                  value: "martin.valts@mail.ru"
   - changeSet:
       id: insert-one-more-user
-      author: user
+      author: martin.valts
       changes:
         - insert:
             tableName: users
@@ -43,3 +46,31 @@ databaseChangeLog:
               - column:
                   name: role_id
                   value: "2"
+              - column:
+                  name: email
+                  value: "martin.valts@mail.ru"
+  - changeSet:
+      id: insert-buyer-user
+      author: martin.valts
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "3"
+              - column:
+                  name: username
+                  value: "john doe"
+              - column:
+                  name: password
+                  value: "$2a$10$aohc8ylx1YcZx6p/L2BRv.I4oQfDin9Ed2CNTy0ZXQ3ZpdiMalLp6"
+              - column:
+                  name: enabled
+                  valueBoolean: true
+              - column:
+                  name: role_id
+                  value: "3"
+              - column:
+                  name: email
+                  value: "martin.valts@mail.ru"

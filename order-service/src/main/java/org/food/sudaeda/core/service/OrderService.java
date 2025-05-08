@@ -50,6 +50,8 @@ public class OrderService {
         order.setSeller(seller);
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.NEW_ORDER);
+        User buyer = userRepository.findById(SecurityUtils.getUserId()).orElseThrow(() -> new NotFoundException("User not found"));
+        order.setBuyer(buyer);
 
         var status = transactionHelper.createTransaction("createOrder");
         Order savedOrder;

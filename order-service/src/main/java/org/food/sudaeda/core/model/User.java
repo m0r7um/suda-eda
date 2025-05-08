@@ -23,6 +23,9 @@ public class User {
     @Column(nullable = false)
     private Boolean enabled;
 
+    @Column(nullable = false, name = "email")
+    private String email;
+
     @OneToOne
     private Authorities role;
 }

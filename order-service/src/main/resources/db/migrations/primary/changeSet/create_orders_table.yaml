@@ -30,3 +30,8 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     checkConstraint: "status IN ('NEW_ORDER', 'SELLER_NOT_ANSWERED', 'APPROVED_BY_SELLER', 'REJECTED_BY_SELLER', 'COURIER_NOT_FOUND', 'APPROVED_BY_COURIER', 'ORDER_IN_PROGRESS', 'ORDER_READY', 'ORDER_NOT_PICKED_UP_BY_COURIER', 'ORDER_PICKED_UP_BY_COURIER')"
+              - column:
+                  name: buyer_id
+                  type: bigint
+                  constraints:
+                    nullable: false

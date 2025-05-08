@@ -34,3 +34,8 @@ databaseChangeLog:
                   type: timestamp(6)
                   constraints:
                     nullable: false
+              - column:
+                  name: is_sent
+                  type: boolean
+                  constraints:
+                    nullable: false

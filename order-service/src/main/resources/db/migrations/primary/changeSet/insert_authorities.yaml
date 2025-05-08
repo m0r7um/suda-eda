@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: insert-initial-authorities
-      author: user
+      author: martin.valts
       changes:
         - insert:
             tableName: authorities
@@ -11,7 +11,7 @@ databaseChangeLog:
                   value: ROLE_COURIER
   - changeSet:
       id: insert-one-more-authorities
-      author: user
+      author: martin.valts
       changes:
         - insert:
             tableName: authorities
@@ -19,3 +19,13 @@ databaseChangeLog:
               - column:
                   name: authority
                   value: ROLE_SELLER
+  - changeSet:
+      id: insert-buyer-authorities
+      author: martin.valts
+      changes:
+        - insert:
+            tableName: authorities
+            columns:
+              - column:
+                  name: authority
+                  value: ROLE_BUYER

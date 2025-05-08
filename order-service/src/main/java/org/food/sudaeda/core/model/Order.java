@@ -21,6 +21,10 @@ public class Order {
     @JoinColumn(name = "seller_id")
     private User seller;
 
+    @ManyToOne
+    @JoinColumn(name = "buyer_id")
+    private User buyer;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

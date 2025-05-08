@@ -37,3 +37,8 @@ databaseChangeLog:
                     referencedTableName: authorities
                     referencedColumnNames: id
                     foreignKeyName: fk_users_authorities
+              - column:
+                  name: email
+                  type: varchar
+                  constraints:
+                    nullable: false

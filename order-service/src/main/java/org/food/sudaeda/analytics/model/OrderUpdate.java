@@ -33,4 +33,7 @@ public class OrderUpdate {
 
     @Column(nullable = false, name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(nullable = false, name = "is_sent")
+    private Boolean isSent;
 }

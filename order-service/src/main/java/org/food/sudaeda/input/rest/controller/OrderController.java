@@ -15,6 +15,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
+    @PreAuthorize("hasRole('BUYER')")
     public ResponseEntity<CreateOrderResponse> createNewOrder(@RequestBody CreateOrderRequest request) {
         return ResponseEntity.ok(orderService.createNewOrder(request));
     }

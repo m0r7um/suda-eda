@@ -23,6 +23,7 @@ public class OrderUpdateService {
                 .fromStatus(fromStatus)
                 .toStatus(toStatus)
                 .createdAt(LocalDateTime.now())
+                .isSent(false)
                 .build();
         return orderUpdateRepository.save(orderUpdate);
     }

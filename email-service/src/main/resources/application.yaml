@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: email-service
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MY_MAIL}
+    password: ${MY_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            trust: smtp.gmail.com
+          starttls:
+            enable: true
+
+email:
+  from: ${MY_MAIL}
+  subject: "Order status changed"
+
+artemis:
+  username: admin
+  password: admin
+  order-status-update-queue: order-status-update-queue

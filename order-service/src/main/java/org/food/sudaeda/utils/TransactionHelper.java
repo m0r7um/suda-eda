@@ -10,20 +10,20 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 @Service
 @RequiredArgsConstructor
 public class TransactionHelper {
-    private final PlatformTransactionManager txManager;
+    private final PlatformTransactionManager transactionManager;
 
     public TransactionStatus createTransaction(String transactionName) {
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName(transactionName);
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-        return txManager.getTransaction(def);
+        return transactionManager.getTransaction(def);
     }
 
     public void commit(TransactionStatus status) {
-        txManager.commit(status);
+        transactionManager.commit(status);
     }
 
     public void rollback(TransactionStatus status) {
-        txManager.rollback(status);
+        transactionManager.rollback(status);
     }
 }

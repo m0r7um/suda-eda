@@ -2,6 +2,7 @@ package org.food.sudaeda.core.scheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import org.food.sudaeda.analytics.repository.OrderUpdateRepository;
 import org.food.sudaeda.configuration.properties.ArtemisProperties;
@@ -20,6 +21,7 @@ public class TransactionalOutboxScheduler {
     private final ArtemisProperties artemisProperties;
     private final ObjectMapper objectMapper;
     private final OrderRepository orderRepository;
+    private final EntityManagerFactory analyticsEntityManagerFactory;
 
     @PostConstruct
     public void init() throws SchedulerException {
@@ -43,6 +45,7 @@ public class TransactionalOutboxScheduler {
         dataMap.put("jmsTemplate", jmsTemplate);
         dataMap.put("topicName", artemisProperties.getOrderStatusUpdateQueue());
         dataMap.put("objectMapper", objectMapper);
+        dataMap.put("entityManagerFactory", analyticsEntityManagerFactory);
         return dataMap;
     }
 }

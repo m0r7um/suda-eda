@@ -10,12 +10,47 @@ services:
       - "5432:5432"
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.4
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KC_DB: "postgres"
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: "postgres"
+      KC_DB_PASSWORD: "postgres"
+      KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: "admin"
+      KEYCLOAK_ADMIN_PASSWORD: "admin"
+      KC_HOSTNAME: localhost
+      KC_PROXY: edge
+      KC_HTTP_PORT: 8080
+      KC_HTTPS_PORT: 8443
+      KC_HOSTNAME_PORT: 8081
+    command:
+      - "start-dev"
+      - "--import-realm"
+    volumes:
+      - ./keycloak/realm-import.json:/opt/keycloak/data/import/realm-import.json
+    ports:
+      - "8081:8080"
+      - "8444:8443"
+
   artemis:
     image: apache/activemq-artemis:2.31.2
     container_name: artemis
     environment:
-      ARTEMIS_USER: admin
-      ARTEMIS_PASSWORD: admin
+      ARTEMIS_USER: "admin"
+      ARTEMIS_PASSWORD: "admin"
     ports:
       - "61616:61616"
       - "8161:8161"

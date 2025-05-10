@@ -1,0 +1,47 @@
+{
+  "realm": "suda-eda",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "suda-eda-client",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"]
+    }
+  ],
+  "users": [
+    {
+      "username": "ivangovnov",
+      "enabled": true,
+      "credentials" : [
+        { "type" : "password",
+          "value" : "grasskiller" }
+      ],
+      "realmRoles": [ "courier" ],
+      "clientRoles": {
+        "account": [ "manage-account" ]
+      },
+      "attributes": {
+        "rating": "4.9",
+        "remark": "Плюёт в пиццу"
+      }
+    }
+  ],
+  "roles" : {
+    "realm" : [
+      {
+        "name": "courier",
+        "description": "User that can respond to orders and deliver them"
+      },
+      {
+        "name": "seller",
+        "description": "Represents the restaurant"
+      },
+      {
+        "name": "buyer",
+        "description": "User that can make orders"
+      }
+    ]
+  }
+}

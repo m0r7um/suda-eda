@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connector xmlns="https://jakarta.ee/xml/ns/jakartaee"
+           version="10"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/connector_3_0.xsd">
+    <display-name>Keycloak Adapter</display-name>
+    <vendor-name>Suda Eda</vendor-name>
+    <eis-type>Keycloak</eis-type>
+    <resourceadapter-version>1.0</resourceadapter-version>
+    <resourceadapter>
+        <outbound-resourceadapter>
+            <connection-definition>
+                <managedconnectionfactory-class>org.food.sudaeda.jca.KeycloakManagedConnectionFactory</managedconnectionfactory-class>
+                <connectionfactory-interface>org.food.sudaeda.jca.KeycloakConnectionFactory</connectionfactory-interface>
+                <connection-interface>org.food.sudaeda.jca.KeycloakConnection</connection-interface>
+            </connection-definition>
+            <config-property>
+                <config-property-name>serverUrl</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            <config-property>
+                <config-property-name>realm</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            <config-property>
+                <config-property-name>clientId</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            <config-property>
+                <config-property-name>clientSecret</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+        </outbound-resourceadapter>
+    </resourceadapter>
+</connector>

@@ -19,7 +19,6 @@ keycloak:
   realm: suda-eda
   client-id: suda-eda-client
   client-secret: ${KC_CLIENT_SECRET}
-  grant-type: client_credentials
 
 datasource:
   jdbc-url: jdbc:postgresql://localhost:5432/studs

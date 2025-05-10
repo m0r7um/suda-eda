@@ -6,7 +6,9 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.UserRepresentation;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class KeycloakConnectionImpl implements KeycloakConnection {
     private final Keycloak keycloak;
@@ -30,10 +32,14 @@ public class KeycloakConnectionImpl implements KeycloakConnection {
 
     @Override
     public List<String> getUserAttribute(String userId, String attributeName) {
-        return keycloak.realm(realm).users().get(userId)
-                .toRepresentation()
-                .getAttributes()
-                .get(attributeName);
+        UserRepresentation userRep = keycloak.realm(realm)
+                .users()
+                .get(userId)
+                .toRepresentation();
+
+        return Optional.ofNullable(userRep.getAttributes())
+                .map(attrs -> attrs.get(attributeName))
+                .orElse(Collections.emptyList());
     }
 
     @Override

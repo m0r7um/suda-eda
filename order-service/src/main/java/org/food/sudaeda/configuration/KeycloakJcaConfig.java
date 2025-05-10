@@ -5,9 +5,6 @@ import org.food.sudaeda.jca.KeycloakManagedConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jndi.JndiObjectFactoryBean;
-
-import javax.naming.NamingException;
 
 @Configuration
 public class KeycloakJcaConfig {
@@ -23,16 +20,6 @@ public class KeycloakJcaConfig {
 
     @Value("${keycloak.client-secret}")
     private String clientSecret;
-
-    @Bean
-    public KeycloakManagedConnectionFactory keycloakManagedConnectionFactory() {
-        KeycloakManagedConnectionFactory factory = new KeycloakManagedConnectionFactory();
-        factory.setServerUrl(serverUrl);
-        factory.setRealm(realm);
-        factory.setClientId(clientId);
-        factory.setClientSecret(clientSecret);
-        return factory;
-    }
 
     @Bean
     public KeycloakConnectionFactory keycloakConnectionFactory() {
